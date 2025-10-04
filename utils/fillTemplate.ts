@@ -1,33 +1,49 @@
-import fs from 'fs';
-import path from 'path';
-import PizZip from 'pizzip';
-import Docxtemplater from 'docxtemplater';
-import { PlaceholderMap } from '../types/placeholders';
+import fs from "fs";
+import PizZip from "pizzip";
+import Docxtemplater from "docxtemplater";
 
-export function fillTemplate(templateName: 'ADHD' | 'Autism', data: PlaceholderMap): Buffer {
-  const filename = templateName === 'ADHD' ? 'ADHD.docx' : 'Autism.docx';
-  const templatePath = path.join(process.cwd(), 'templates', filename);
-  if (!fs.existsSync(templatePath)) {
-    throw new Error(`Template not found at: ${templatePath}. Please add templates/${filename}`);
-  }
-
-  const content = fs.readFileSync(templatePath, 'binary');
-  const zip = new PizZip(content);
-
-  const doc = new Docxtemplater(zip, {
-    paragraphLoop: true,
-    linebreaks: true,
-    nullGetter: () => ''
-  });
-
-  doc.setData(data);
+/**
+ * Fill a Word (.docx) template with mapped placeholder values.
+ * @param templatePath - Absolute path to the .docx file (e.g., /templates/ADHD.docx)
+ * @param data - Key/value map of placeholders and replacement text
+ * @returns Buffer (the filled .docx file ready to send/download)
+ */
+export async function fillTemplate(
+  templatePath: string,
+  data: Record<string, string>
+): Promise<Buffer> {
   try {
-    doc.render();
-  } catch (error: any) {
-    console.error('[NeuroSense_v2] Docxtemplater render error:', error);
-    throw error;
-  }
+    // Load the .docx template as binary
+    const content = fs.readFileSync(templatePath, "binary");
 
-  const out = doc.getZip().generate({ type: 'nodebuffer' });
-  return out;
+    // Create a zip container
+    const zip = new PizZip(content);
+
+    // Initialize the document
+    const doc = new Docxtemplater(zip, {
+      paragraphLoop: true,
+      linebreaks: true,
+    });
+
+    // Replace placeholders with mapped values
+    doc.setData(data);
+
+    try {
+      doc.render();
+    } catch (error: any) {
+      console.error("[fillTemplate] Render Error:", error);
+      throw new Error(`Template rendering failed: ${error.message}`);
+    }
+
+    // Generate a new .docx file in memory
+    const output = doc.getZip().generate({
+      type: "nodebuffer",
+      compression: "DEFLATE",
+    });
+
+    return output;
+  } catch (error: any) {
+    console.error("[fillTemplate] Error:", error);
+    throw new Error(`Failed to fill template: ${error.message}`);
+  }
 }

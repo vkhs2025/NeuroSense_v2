@@ -1,28 +1,35 @@
-import { PlaceholderMap, TemplateType } from '../types/placeholders';
+import { ADHD_PLACEHOLDERS, AUTISM_PLACEHOLDERS } from "../types/placeholders";
 
+/**
+ * Maps extracted text from the input document to placeholders
+ * based on section headings. One placeholder per section.
+ */
 export function mapPlaceholders(
-  template: TemplateType,
-  paragraphs: string[],
-  extras: { clinicianNotes?: string }
-): PlaceholderMap {
-  const map: PlaceholderMap = {};
+  text: string,
+  templateType: "ADHD" | "Autism"
+) {
+  const lines = text.split(/\n+/).filter(Boolean);
+  const placeholders =
+    templateType === "ADHD" ? ADHD_PLACEHOLDERS : AUTISM_PLACEHOLDERS;
 
-  // Generic paragraph mapping
-  paragraphs.forEach((p, idx) => {
-    map[`PARAGRAPH_${idx + 1}`] = p;
-  });
+  const mapped: Record<string, string> = {};
+  let currentPlaceholder = "";
 
-  // Optional clinician notes
-  if (extras.clinicianNotes) {
-    map.CLINICIAN_NOTES = extras.clinicianNotes;
+  for (const line of lines) {
+    // Match line to section heading (case-insensitive)
+    const placeholder = placeholders.find((p) =>
+      line.toLowerCase().includes(p.replace(/_/g, " ").toLowerCase())
+    );
+
+    if (placeholder) {
+      currentPlaceholder = placeholder;
+      mapped[currentPlaceholder] = "";
+    } else if (currentPlaceholder) {
+      // Append text under the current section
+      mapped[currentPlaceholder] +=
+        (mapped[currentPlaceholder] ? " " : "") + line.trim();
+    }
   }
 
-  // Template-specific defaults (can be extended later)
-  if (template === 'ADHD Assessment (CYP)') {
-    map.DIAGNOSIS = map.DIAGNOSIS || 'Attention Deficit Hyperactivity Disorder (ADHD)';
-  } else if (template === 'Autism Assessment (CYP)') {
-    map.DIAGNOSIS = map.DIAGNOSIS || 'Autism Spectrum Disorder (ASD)';
-  }
-
-  return map;
+  return mapped;
 }

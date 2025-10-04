@@ -1,21 +1,45 @@
-export type TemplateType = 'ADHD Assessment (CYP)' | 'Autism Assessment (CYP)';
+export const ADHD_PLACEHOLDERS = [
+  "Assessment_Outcome",
+  "Assessment_Information",
+  "Who_We_Assessed",
+  "Consent",
+  "Understanding_of_Appointment",
+  "Reason_for_Referral_and_Presenting_Concerns",
+  "Past_Medical_History",
+  "Early_Developmental_History",
+  "Family_and_Social_History",
+  "ADHD_Features_Inattention",
+  "ADHD_Features_Hyperactivity",
+  "ADHD_Features_Impulsivity",
+  "Self_Care_and_Independence",
+  "Social_Functioning",
+  "Restricted_and_Repetitive_Interests",
+  "Diet_and_Growth",
+  "Sleep",
+  "Mental_Health_and_Wellbeing",
+  "Observations_from_Clinical_Interview",
+  "Diagnostic_Conclusion",
+];
 
-export interface PlaceholderMap {
-  // universal
-  PATIENT_NAME?: string;
-  PATIENT_AGE?: string;
-  PATIENT_GENDER?: string;
-  SCHOOL_NAME?: string;
-  YEAR_LEVEL?: string;
-  ASSESSMENT_DATE?: string;
-  ASSESSOR_NAME?: string;
-  PARENT_NAME?: string;
-  CONSULTATION_TYPE?: string;
-  CONSENT_TYPE?: string;
-  REFERRED_REASON?: string;
-  DIAGNOSIS?: string;
-  CLINICIAN_NOTES?: string;
-
-  // dynamic paragraphs
-  [key: `PARAGRAPH_${number}`]: string | undefined;
-}
+export const AUTISM_PLACEHOLDERS = [
+  "Assessment_Outcome",
+  "Assessment_Information",
+  "Who_We_Assessed",
+  "Consent",
+  "Understanding_of_Appointment",
+  "Reason_for_Referral_and_Presenting_Concerns",
+  "Family_and_Social_History",
+  "Past_Medical_History",
+  "Early_Developmental_History",
+  "Mental_Health_and_Wellbeing",
+  "Problems_with_Social_Initiation_and_Response",
+  "Problems_with_Nonverbal_Communication",
+  "Problems_with_Social_Awareness_and_Insight",
+  "Atypical_Speech_Movements_and_Play",
+  "Rituals_and_Resistance_to_Change",
+  "Preoccupations_with_Objects_or_Topics",
+  "Atypical_Sensory_Behaviours",
+  "Observations_from_Clinical_Interview",
+  "Why_We_Diagnosed",
+  "Recommendations_and_Further_Considerations",
+];
