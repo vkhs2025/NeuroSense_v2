@@ -1,7 +1,11 @@
-/* app/globals.css */
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* optional small tweaks */
+/* optional tweaks */
 @layer base {
-  html, body { height: 100%; }
+  html, body {
+    height: 100%;
+    background-color: #f9fafb;
+  }
 }
