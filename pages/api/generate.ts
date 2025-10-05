@@ -1,3 +1,5 @@
+console.log("[API] /api/generate called");
+
 import type { NextApiRequest, NextApiResponse } from "next";
 import formidable from "formidable";
 import fs from "fs";
@@ -21,10 +23,40 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   try {
     // Parse the incoming form data
     const form = formidable({ multiples: false });
-    const [fields, files] = await form.parse(req);
+
+    const { fields, files }: any = await new Promise((resolve, reject) => {
+      form.parse(req, (err, fields, files) => {
+        if (err) {
+          console.error("[API] Form parse error:", err);
+          return reject(err);
+        }
+        console.log("[API] Form parsed successfully:", {
+          fieldKeys: Object.keys(fields),
+          fileKeys: Object.keys(files),
+        });
+        resolve({ fields, files });
+      });
+    });
+    console.log("[API] Parsed fields:", fields);
+
+
 
     const uploadedFile = files.file?.[0];
-    const templateType = fields.templateType?.[0] as "ADHD" | "Autism";
+    // Normalize and clean templateType safely
+    const rawType = Array.isArray(fields.templateType)
+    ? fields.templateType[0]
+    : fields.templateType;
+
+    const templateType =
+    typeof rawType === "string" && rawType.toLowerCase().includes("autism")
+      ? "Autism"
+      : "ADHD";
+
+    console.log("[API] Template normalized as:", templateType);
+
+
+    console.log("[API] Template selected:", templateType);
+
 
     if (!uploadedFile || !templateType) {
       return res.status(400).json({ error: "Missing file or templateType" });

@@ -1,49 +1,78 @@
 import fs from "fs";
+import path from "path";
 import PizZip from "pizzip";
-import Docxtemplater from "docxtemplater";
 
 /**
- * Fill a Word (.docx) template with mapped placeholder values.
- * @param templatePath - Absolute path to the .docx file (e.g., /templates/ADHD.docx)
- * @param data - Key/value map of placeholders and replacement text
- * @returns Buffer (the filled .docx file ready to send/download)
+ * Lightweight DOCX filler — replaces {{placeholders}} directly in the XML.
+ * Logs replacements and handles weird Word formatting splits.
  */
 export async function fillTemplate(
   templatePath: string,
   data: Record<string, string>
 ): Promise<Buffer> {
   try {
-    // Load the .docx template as binary
-    const content = fs.readFileSync(templatePath, "binary");
+    console.log("[fillTemplate] Using lightweight replacer for:", templatePath);
 
-    // Create a zip container
-    const zip = new PizZip(content);
+    // Step 1: Read the DOCX as binary
+    const binary = fs.readFileSync(templatePath, "binary");
 
-    // Initialize the document
-    const doc = new Docxtemplater(zip, {
-      paragraphLoop: true,
-      linebreaks: true,
-    });
+    // Step 2: Unzip the DOCX
+    const zip = new PizZip(binary);
 
-    // Replace placeholders with mapped values
-    doc.setData(data);
+    // Step 3: Load main document XML
+    let docXml = zip.file("word/document.xml")?.asText();
+    if (!docXml) throw new Error("word/document.xml not found in template");
 
-    try {
-      doc.render();
-    } catch (error: any) {
-      console.error("[fillTemplate] Render Error:", error);
-      throw new Error(`Template rendering failed: ${error.message}`);
+    // Step 4: Replace placeholders (case-insensitive, tolerate broken runs)
+    let replacedKeys: string[] = [];
+    let missingKeys: string[] = [];
+
+    for (const [key, value] of Object.entries(data)) {
+      const cleanValue = value || "";
+      // Matches placeholders like {{Key}}, {{ Key }}, even if Word inserted spaces or XML tags in between
+      const regex = new RegExp(
+        `{{\\s*${key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*}}`,
+        "gi"
+      );
+
+      if (regex.test(docXml)) {
+        docXml = docXml.replace(regex, escapeXml(cleanValue));
+        replacedKeys.push(key);
+      } else {
+        missingKeys.push(key);
+      }
     }
 
-    // Generate a new .docx file in memory
-    const output = doc.getZip().generate({
-      type: "nodebuffer",
-      compression: "DEFLATE",
-    });
+    // Step 5: Remove any unreplaced {{placeholders}}
+    docXml = docXml.replace(/{{[^}]+}}/g, "");
 
-    return output;
+    // Step 6: Write the modified XML back into the zip
+    zip.file("word/document.xml", docXml);
+
+    // Step 7: Generate the filled DOCX
+    const outputBuffer = zip.generate({ type: "nodebuffer", compression: "DEFLATE" });
+
+    // Logging summary
+    console.log(`[fillTemplate] Template filled successfully`);
+    console.log(`  • Replaced: ${replacedKeys.length} placeholders`);
+    console.log(`  • Missing: ${missingKeys.length}`);
+    if (missingKeys.length) console.log("  ⚠ Missing:", missingKeys);
+
+    return outputBuffer;
   } catch (error: any) {
     console.error("[fillTemplate] Error:", error);
     throw new Error(`Failed to fill template: ${error.message}`);
   }
+}
+
+/**
+ * Basic XML escaping to ensure characters like &, <, > don’t break the file.
+ */
+function escapeXml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
 }

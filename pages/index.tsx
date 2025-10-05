@@ -48,10 +48,13 @@ export default function Home() {
       form.append('file', file);
       if (notes.trim()) form.append('notes', notes.trim());
       // Future-ready: include chosen template (backend can read later)
-      form.append('template', reportType);
+      const normalizedType =
+        reportType.toLowerCase().includes('autism') ? 'Autism' : 'ADHD';
+      form.append('templateType', reportType);
+
 
       setPhase('generating');
-      setStatus('Analysing with Gemini + generating your report…');
+      setStatus('Generating your report…');
 
       const res = await fetch('/api/generate', { method: 'POST', body: form });
 
@@ -163,8 +166,8 @@ export default function Home() {
                 onChange={(e) => setReportType(e.target.value)}
                 className="h-11 rounded-xl border border-sky-200 bg-white px-3 text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-300"
               >
-                <option value="cyp_adhd">ADHD Assessment (CYP)</option>
-                <option value="cyp_autism">Autism Assessment (CYP)</option>
+                <option value="ADHD">ADHD Assessment (CYP)</option>
+                <option value="Autism">Autism Assessment (CYP)</option>
               </select>
             </div>
 
