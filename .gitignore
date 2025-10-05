@@ -15,3 +15,6 @@ templates/
 
 # Misc
 .DS_Store
+
+!public/templates/
+!public/templates/*.docx
