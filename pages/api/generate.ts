@@ -83,7 +83,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     // Locate the correct template
     const templateFileName =
       templateType === "ADHD" ? "ADHD.docx" : "Autism.docx";
-    const templatePath = path.join(process.cwd(), "templates", templateFileName);
+    const templatePath = path.join(process.cwd(), "public", "templates", templateFileName);
+    console.log("[API] Template path resolved:", templatePath);
 
     // Generate the final .docx file
     const outputBuffer = await fillTemplate(templatePath, mappedData);

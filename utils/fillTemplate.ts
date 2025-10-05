@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import PizZip from "pizzip";
-import path from "path";
+
 
 /**
  * Lightweight DOCX filler — replaces {{placeholders}} directly in the XML.
@@ -15,7 +15,7 @@ export async function fillTemplate(
     console.log("[fillTemplate] Using lightweight replacer for:", templatePath);
 
     // Step 1: Read the DOCX as binary
-    const resolvedPath = path.join(process.cwd(), templatePath);
+    const resolvedPath = path.resolve(templatePath);
     const binary = fs.readFileSync(resolvedPath, "binary");
 
     // Step 2: Unzip the DOCX
