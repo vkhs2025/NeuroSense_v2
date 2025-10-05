@@ -1,14 +1,17 @@
 {
     "version": 2,
-    "builds": [
-      { "src": "next.config.js", "use": "@vercel/next" }
-    ],
     "functions": {
       "api/generate.ts": {
         "maxDuration": 30,
-        "memory": 1024
+        "memory": 1024,
+        "includeFiles": "templates/**"
       }
     },
-    "includeFiles": ["templates/**/*.docx"]
+    "builds": [
+      {
+        "src": "next.config.js",
+        "use": "@vercel/next"
+      }
+    ]
   }
   
